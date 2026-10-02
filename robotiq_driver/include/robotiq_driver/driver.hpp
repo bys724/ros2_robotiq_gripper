@@ -117,5 +117,39 @@ public:
    * @param force A value between 0x00 (no force) or 0xFF (maximum force).
    */
   virtual void set_force(uint8_t force) = 0;
+
+  // --- Status getters for the `gripper_status` GPIO state interfaces (re-creation of lost patch 8f6c893) ---
+  // They return the values cached by the last status read (get_gripper_position / gripper_is_moving),
+  // so they do not add Modbus round trips. Defaults keep fake/mock drivers source-compatible.
+
+  /** @brief Last object detection status (gOBJ). */
+  virtual ObjectDetectionStatus get_object_detection_status()
+  {
+    return ObjectDetectionStatus::MOVING;
+  }
+
+  /** @brief Last activation status (gACT). */
+  virtual ActivationStatus get_activation_status()
+  {
+    return ActivationStatus::RESET;
+  }
+
+  /** @brief Last fault status register (gFLT byte, 0x00 = no fault). */
+  virtual uint8_t get_fault_status()
+  {
+    return 0;
+  }
+
+  /** @brief Speed currently commanded to the gripper (rSP, 0x00-0xFF). */
+  virtual uint8_t get_commanded_speed()
+  {
+    return 0;
+  }
+
+  /** @brief Force currently commanded to the gripper (rFR, 0x00-0xFF). */
+  virtual uint8_t get_commanded_force()
+  {
+    return 0;
+  }
 };
 }  // namespace robotiq_driver

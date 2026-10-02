@@ -115,6 +115,18 @@
                 </gpio>
             </xacro:unless>
 
+            <!-- Raw Robotiq register readback (real hardware only). Exported by RobotiqGripperHardwareInterface. -->
+            <xacro:unless value="${use_fake_hardware or sim_ignition or sim_isaac}">
+                <gpio name="gripper_status">
+                    <state_interface name="position_raw" />
+                    <state_interface name="object_detection_status" />
+                    <state_interface name="fault_status" />
+                    <state_interface name="activation_status" />
+                    <state_interface name="commanded_speed" />
+                    <state_interface name="commanded_force" />
+                </gpio>
+            </xacro:unless>
+
         </ros2_control>
     </xacro:macro>
 

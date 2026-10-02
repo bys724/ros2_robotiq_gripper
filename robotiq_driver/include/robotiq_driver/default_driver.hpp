@@ -89,6 +89,12 @@ public:
    */
   void set_force(uint8_t force) override;
 
+  ObjectDetectionStatus get_object_detection_status() override;
+  ActivationStatus get_activation_status() override;
+  uint8_t get_fault_status() override;
+  uint8_t get_commanded_speed() override;
+  uint8_t get_commanded_force() override;
+
 private:
   /**
    * With this command we send a request and wait for a response of given size.
@@ -117,6 +123,7 @@ private:
   ActionStatus action_status_;
   GripperStatus gripper_status_;
   ObjectDetectionStatus object_detection_status_;
+  uint8_t fault_status_ = 0;  // gFLT register byte from the last status read
 
   uint8_t gripper_position_;
   uint8_t commanded_gripper_speed_;

@@ -181,6 +181,19 @@ std::vector<hardware_interface::StateInterface> RobotiqGripperHardwareInterface:
   state_interfaces.emplace_back(
       hardware_interface::StateInterface(info_.joints[0].name, hardware_interface::HW_IF_VELOCITY, &gripper_velocity_));
 
+  // Raw register readback as a GPIO (see <gpio name="gripper_status"> in 2f_85.ros2_control.xacro).
+  // Consumers read it from /dynamic_joint_states by the fixed name "gripper_status".
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gripper_status", "position_raw", &gpio_position_raw_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gripper_status", "object_detection_status", &gpio_object_detection_status_));
+  state_interfaces.emplace_back(hardware_interface::StateInterface("gripper_status", "fault_status", &gpio_fault_status_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gripper_status", "activation_status", &gpio_activation_status_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gripper_status", "commanded_speed", &gpio_commanded_speed_));
+  state_interfaces.emplace_back(
+      hardware_interface::StateInterface("gripper_status", "commanded_force", &gpio_commanded_force_));
+
   return state_interfaces;
 }
 
@@ -275,6 +288,13 @@ hardware_interface::return_type RobotiqGripperHardwareInterface::read(const rclc
 {
   gripper_position_ = gripper_closed_pos_ * (gripper_current_state_.load() - kGripperMinPos) / kGripperRange;
 
+  gpio_position_raw_ = gripper_current_state_.load();
+  gpio_object_detection_status_ = status_object_detection_.load();
+  gpio_fault_status_ = status_fault_.load();
+  gpio_activation_status_ = status_activation_.load();
+  gpio_commanded_speed_ = status_commanded_speed_.load();
+  gpio_commanded_force_ = status_commanded_force_.load();
+
   if (!std::isnan(reactivate_gripper_cmd_))
   {
     RCLCPP_INFO(kLogger, "Sending gripper reactivation request.");
@@ -328,6 +348,12 @@ void RobotiqGripperHardwareInterface::background_task()
 
       // Read the state of the gripper.
       gripper_current_state_.store(this->driver_->get_gripper_position());
+      // get_gripper_position() refreshed the cached status; publish the rest of it without extra reads.
+      status_object_detection_.store(static_cast<uint8_t>(this->driver_->get_object_detection_status()));
+      status_fault_.store(this->driver_->get_fault_status());
+      status_activation_.store(this->driver_->get_activation_status() == Driver::ActivationStatus::ACTIVE ? 1 : 0);
+      status_commanded_speed_.store(this->driver_->get_commanded_speed());
+      status_commanded_force_.store(this->driver_->get_commanded_force());
     }
     catch (std::exception& e)
     {

@@ -69,6 +69,7 @@ constexpr int kWriteResponseSize = 8;
 
 constexpr size_t kResponseHeaderSize = 3;
 constexpr size_t kGripperStatusIndex = 0;
+constexpr size_t kFaultStatusIndex = 2;  // Byte 2 of the input registers: FAULT STATUS (gFLT)
 constexpr size_t kPositionIndex = 4;
 
 // If the gripper connection is not stable we may want to try sending the command again.
@@ -202,6 +203,31 @@ void DefaultDriver::set_force(uint8_t force)
   commanded_gripper_force_ = force;
 }
 
+Driver::ObjectDetectionStatus DefaultDriver::get_object_detection_status()
+{
+  return object_detection_status_;
+}
+
+Driver::ActivationStatus DefaultDriver::get_activation_status()
+{
+  return activation_status_;
+}
+
+uint8_t DefaultDriver::get_fault_status()
+{
+  return fault_status_;
+}
+
+uint8_t DefaultDriver::get_commanded_speed()
+{
+  return commanded_gripper_speed_;
+}
+
+uint8_t DefaultDriver::get_commanded_force()
+{
+  return commanded_gripper_force_;
+}
+
 std::vector<uint8_t> DefaultDriver::create_read_command(uint16_t first_register, uint8_t num_registers)
 {
   std::vector<uint8_t> request = { slave_address_,
@@ -291,6 +317,7 @@ void DefaultDriver::update_status()
   }
 
   // Read the current gripper position.
+  fault_status_ = response[kResponseHeaderSize + kFaultStatusIndex];
   gripper_position_ = response[kResponseHeaderSize + kPositionIndex];
 }
 }  // namespace robotiq_driver

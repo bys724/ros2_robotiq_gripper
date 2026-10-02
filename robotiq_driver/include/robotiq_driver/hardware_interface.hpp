@@ -163,6 +163,20 @@ protected:
   std::atomic<uint8_t> write_speed_;
   std::atomic<uint8_t> gripper_current_state_;
 
+  // `gripper_status` GPIO state interfaces (raw Robotiq registers). Written by the background thread
+  // (atomics), copied into the double buffers in read() — same pattern as gripper_current_state_.
+  std::atomic<uint8_t> status_object_detection_{ 0 };
+  std::atomic<uint8_t> status_fault_{ 0 };
+  std::atomic<uint8_t> status_activation_{ 0 };
+  std::atomic<uint8_t> status_commanded_speed_{ 0 };
+  std::atomic<uint8_t> status_commanded_force_{ 0 };
+  double gpio_position_raw_ = 0.0;
+  double gpio_object_detection_status_ = 0.0;
+  double gpio_fault_status_ = 0.0;
+  double gpio_activation_status_ = 0.0;
+  double gpio_commanded_speed_ = 0.0;
+  double gpio_commanded_force_ = 0.0;
+
   double reactivate_gripper_cmd_ = 0.0;
   std::atomic<bool> reactivate_gripper_async_cmd_;
   double reactivate_gripper_response_ = 0.0;
